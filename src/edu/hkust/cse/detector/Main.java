@@ -1,6 +1,7 @@
 package edu.hkust.cse.detector;
 
 import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * @author andrew	Jun 28, 2011
@@ -507,12 +508,7 @@ public class Main {
 			smList[i]=constructStateMatrix(stateList[i]);
 		}
 		
-		//undeterminismDetection(stateList[0], smList[0]);
-		for(int i=0;i<smList[0].getMatrix().size();i++){
-			out(smList[0].getMatrix().get(i));
-			System.out.println();
-			
-		}
+		undeterminismDetection(stateList[1], smList[1]);
 	}
 	
 	public static boolean globalConstriantsSatisfied(boolean[] smRow){
@@ -568,34 +564,38 @@ public class Main {
 			//first case
 			blist[i]=false;
 			boolean flag=false;
+			byte min=Byte.MAX_VALUE;
 			ArrayList<Rule> ruleList=new ArrayList<Rule>();
 			if(globalConstriantsSatisfied(blist)){
 				for(int j=0;j<relatedRuleList.size();j++){
 					if(relatedRuleList.get(j).satisfied(blist)){
 						flag=true;
 						ruleList.add(relatedRuleList.get(j));
+						if(relatedRuleList.get(j).getPriority()<min){
+							min=relatedRuleList.get(j).getPriority();
+						}
 					}
 				}
 			}
 			if(flag){
 				//first remove rules with low priority in rule list
 				if(ruleList.size()>1){
-					byte min=Byte.MAX_VALUE;
-					for(int j=0;j<ruleList.size();j++){
-						byte temp=ruleList.get(j).getPriority();
-						if(temp<min){
-							min=temp;
-						}
-					}
-					ArrayList<Integer> toDelete=new ArrayList<Integer>();
+//					byte min=Byte.MAX_VALUE;
+//					for(int j=0;j<ruleList.size();j++){
+//						byte temp=ruleList.get(j).getPriority();
+//						if(temp<min){
+//							min=temp;
+//						}
+//					}
+					ArrayList<Rule> toDelete=new ArrayList<Rule>();
 					for(int j=0;j<ruleList.size();j++){
 						byte temp=ruleList.get(j).getPriority();
 						if(temp>min){
-							toDelete.add(j);
+							toDelete.add(ruleList.get(j));
 						}
 					}
 					for(int j=0;j<toDelete.size();j++){
-						ruleList.remove(toDelete.get(j));
+						ruleList.removeAll(toDelete);
 					}
 				}
 				sm.getMatrix().add(blist.clone());
@@ -608,37 +608,42 @@ public class Main {
 			//second case
 			blist[i]=true;
 			flag=false;
+			min=Byte.MAX_VALUE;
 			ruleList=new ArrayList<Rule>();
 			if(globalConstriantsSatisfied(blist)){
 				for(int j=0;j<relatedRuleList.size();j++){
 					if(relatedRuleList.get(j).satisfied(blist)){
 						flag=true;
 						ruleList.add(relatedRuleList.get(j));
+						if(relatedRuleList.get(j).getPriority()<min){
+							min=relatedRuleList.get(j).getPriority();
+						}
 					}
 				}
 			}
 			if(flag){
 				//first remove rules with low priority in rule list
 				if(ruleList.size()>1){
-					byte min=Byte.MAX_VALUE;
-					for(int j=0;j<ruleList.size();j++){
-						byte temp=ruleList.get(j).getPriority();
-						if(temp<min){
-							min=temp;
-						}
-					}
-					ArrayList<Integer> toDelete=new ArrayList<Integer>();
+//					byte min=Byte.MAX_VALUE;
+//					for(int j=0;j<ruleList.size();j++){
+//						byte temp=ruleList.get(j).getPriority();
+//						if(temp<min){
+//							min=temp;
+//						}
+//					}
+					ArrayList<Rule> toDelete=new ArrayList<Rule>();
 					for(int j=0;j<ruleList.size();j++){
 						byte temp=ruleList.get(j).getPriority();
 						if(temp>min){
-							toDelete.add(j);
+							toDelete.add(ruleList.get(j));
 						}
 					}
 					for(int j=0;j<toDelete.size();j++){
-						ruleList.remove(toDelete.get(j));
+						//System.out.println("remove");
+						ruleList.removeAll(toDelete);
 					}
 				}
-				sm.getMatrix().add(blist);
+				sm.getMatrix().add(blist.clone());
 				//out(blist);
 				sm.getRuleListList().add(ruleList);
 				//printRule(ruleList);
@@ -672,14 +677,11 @@ public class Main {
 	
 	public static void undeterminismDetection(State s,StateMatrix sm){
 		for(int i=0;i<sm.getMatrix().size();i++){
-			out(sm.getMatrix().get(i));
-			printRule(sm.getRuleListList().get(i));
-			System.out.println();
-//			if(sm.getRuleListList().get(i).size()>1){
-//				out(sm.getMatrix().get(i));
-//				//printRule(sm.getRuleListList().get(i));
-//				//System.out.println();
-//			}
+			if(sm.getRuleListList().get(i).size()>1){
+				out(sm.getMatrix().get(i));
+				printRule(sm.getRuleListList().get(i));
+				System.out.println();
+			}
 		}
 	}
 
