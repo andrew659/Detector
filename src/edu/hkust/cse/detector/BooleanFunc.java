@@ -48,7 +48,7 @@ public class BooleanFunc implements LogicOperator {
 	public void setSingle(boolean single){
 		this.isSingle=single;
 	}
-	public boolean satisfied(ArrayList<Boolean> blist){
+	public boolean satisfied(boolean[] blist){
 		boolean flag=false;
 		if(conn==0){
 			flag=false;
@@ -58,23 +58,23 @@ public class BooleanFunc implements LogicOperator {
 		}
 		if(isSingle){
 			if(this.form.get(0)){
-				return blist.get((int)cvNo.get(0));
+				return blist[(int)cvNo.get(0)];
 			}
 			else{
-				return !blist.get((int)cvNo.get(0));
+				return !blist[(int)cvNo.get(0)];
 			}
 		}
 		else{
 			for(int i=0;i<this.cvNo.size();i++){
 				if(conn==0){
-					if(form.get(i)==blist.get((int)cvNo.get(i))){
+					if(form.get(i)==blist[(int)cvNo.get(i)]){
 						flag=true;
 						break;
 					}
 				}
 				//else conn==1 conjunction
 				else{
-					if(form.get(i)!=blist.get((int)cvNo.get(i))){
+					if(form.get(i)!=blist[(int)cvNo.get(i)]){
 						flag=false;
 						break;
 					}

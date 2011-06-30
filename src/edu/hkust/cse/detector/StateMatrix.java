@@ -6,20 +6,17 @@ import java.util.ArrayList;
  * @author andrew	Jun 17, 2011
  */
 public class StateMatrix {
-	private ArrayList<Short> pcvNoList;
-	private ArrayList<ArrayList<Boolean>> matrix;
+	private ArrayList<boolean[]> matrix;
+	private ArrayList<ArrayList<Rule>> ruleListList;
 	public StateMatrix(){
-		this.pcvNoList=new ArrayList<Short>();
-		this.matrix=new ArrayList<ArrayList<Boolean>>();
+		this.matrix=new ArrayList<boolean[]>();
+		this.ruleListList=new ArrayList<ArrayList<Rule>>();
 	}
-	public ArrayList<Short> getPCVNoList(){
-		return this.pcvNoList;
-	}
-	public ArrayList<ArrayList<Boolean>> getMatrix(){
+	public ArrayList<boolean[]> getMatrix(){
 		return this.matrix;
 	}
-	public int getStateMatrixSize(){
-		return this.matrix.size();
+	public ArrayList<ArrayList<Rule>> getRuleListList(){
+		return this.ruleListList;
 	}
 
 }

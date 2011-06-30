@@ -1,6 +1,6 @@
 package edu.hkust.cse.detector;
 
-import com.sun.org.apache.bcel.internal.generic.NEW;
+import java.util.ArrayList;
 
 /**
  * @author andrew	Jun 28, 2011
@@ -12,47 +12,138 @@ public class Main {
 	/**
 	 * @param args
 	 */
+	//declare 12 propositional context variables
+	private static PropositionalContextVar<Boolean> Agps;
+	private static PropositionalContextVar<String> Bgps;
+	private static PropositionalContextVar<String> Cgps;
+	private static PropositionalContextVar<Integer> Dgps;
+	private static PropositionalContextVar<Integer> Egps;
+	private static PropositionalContextVar<String> Abt;
+	private static PropositionalContextVar<String> Bbt;
+	private static PropositionalContextVar<String> Cbt;
+	private static PropositionalContextVar<String> Dbt;
+	private static PropositionalContextVar<Integer> Ebt;
+	private static PropositionalContextVar<String> At;
+	private static PropositionalContextVar<String> Bt;
+	private static int pcvCount=0;
+	
+	//declare 9 states
+	private static State general;
+	private static State outdoor;
+	private static State office;
+	private static State jogging;
+	private static State driving;
+	private static State drivingFast;
+	private static State home;
+	private static State meeting;
+	private static State sync;
+	private static int stateCount=0;
+	private static State[] stateList;
+	
+	//declare 19 rules
+	private static Rule ActivateOutdoor;
+	private static Rule DeactivateOutdoor;
+	private static Rule ActivateJogging;
+	private static Rule DeactivateJogging;
+	private static Rule ActivateDriving1;
+	private static Rule ActivateDriving2;
+	private static Rule ActivateDriving3;
+	private static Rule ActivateDriving4;
+	private static Rule DeactivateDriving;
+	private static Rule ActivateDrivingFast;
+	private static Rule DeactivateDrivingFast;
+	private static Rule ActivateHome;
+	private static Rule DeactivateHome;
+	private static Rule ActivateOffice;
+	private static Rule DeactivateOffice;
+	private static Rule ActivateMeeting;
+	private static Rule DeactivateMeeting;
+	private static Rule ActivateSync;
+	private static Rule DeactivateSync;
+	private static int ruleCount=0;
+	private static Rule[] ruleList;
+	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		//construct 12 propositional context variables
 		//Agps: GPS.isValid()
-		PropositionalContextVar<Boolean> Agps=new PropositionalContextVar<Boolean>((short)0, "Agps", ContextType.GPS_VALID,ContextOperator.EQUAL, true);
+		Agps=new PropositionalContextVar<Boolean>((short)0, "Agps", ContextType.GPS_VALID,ContextOperator.EQUAL, true);
+		pcvCount++;
 		//Bgps: GPS.location()=HOME
-		PropositionalContextVar<String> Bgps=new PropositionalContextVar<String>((short)1, "Bgps", ContextType.GPS_LOCATION, ContextOperator.EQUAL,"HOME" );
+		Bgps=new PropositionalContextVar<String>((short)1, "Bgps", ContextType.GPS_LOCATION, ContextOperator.EQUAL,"HOME" );
+		pcvCount++;
 		//Cgps: GPS.location()=OFFICE
-		PropositionalContextVar<String> Cgps=new PropositionalContextVar<String>((short)2, "Cgps", ContextType.GPS_LOCATION, ContextOperator.EQUAL, "OFFICE");
+		Cgps=new PropositionalContextVar<String>((short)2, "Cgps", ContextType.GPS_LOCATION, ContextOperator.EQUAL, "OFFICE");
+		pcvCount++;
 		//Dgps: GPS.speed()>5
-		PropositionalContextVar<Integer> Dgps=new PropositionalContextVar<Integer>((short)3, "Dgps", ContextType.GPS_SPEED, ContextOperator.GREATER, 5);
+		Dgps=new PropositionalContextVar<Integer>((short)3, "Dgps", ContextType.GPS_SPEED, ContextOperator.GREATER, 5);
+		pcvCount++;
 		//Egps: GPS.speed()>70
-		PropositionalContextVar<Integer> Egps=new PropositionalContextVar<Integer>((short)4, "Egps",ContextType.GPS_SPEED , ContextOperator.GREATER, 70);
+		Egps=new PropositionalContextVar<Integer>((short)4, "Egps",ContextType.GPS_SPEED , ContextOperator.GREATER, 70);
+		pcvCount++;
 		//Abt: BT=CAR_HANDSFREE
-		PropositionalContextVar<String> Abt=new PropositionalContextVar<String>((short)5, "Abt", ContextType.BT, ContextOperator.EQUAL, "CAR_HANDSFREE");
+		Abt=new PropositionalContextVar<String>((short)5, "Abt", ContextType.BT, ContextOperator.EQUAL, "CAR_HANDSFREE");
+		pcvCount++;
 		//Bbt: BT=HOME_PC
-		PropositionalContextVar<String> Bbt=new PropositionalContextVar<String>((short)6, "Bbt", ContextType.BT, ContextOperator.EQUAL, "HOME_PC");
+		Bbt=new PropositionalContextVar<String>((short)6, "Bbt", ContextType.BT, ContextOperator.EQUAL, "HOME_PC");
+		pcvCount++;
 		//Cbt: BT=OFFICE_PC
-		PropositionalContextVar<String> Cbt=new PropositionalContextVar<String>((short)7, "Cbt", ContextType.BT, ContextOperator.EQUAL, "OFFICE_PC");
+		Cbt=new PropositionalContextVar<String>((short)7, "Cbt", ContextType.BT, ContextOperator.EQUAL, "OFFICE_PC");
+		pcvCount++;
 		//Dbt: BT=OFFICE_PC_*
-		PropositionalContextVar<String> Dbt=new PropositionalContextVar<String>((short)8, "Dbt", ContextType.BT, ContextOperator.EQUAL, "OFFICE_PC_*");
+		Dbt=new PropositionalContextVar<String>((short)8, "Dbt", ContextType.BT, ContextOperator.EQUAL, "OFFICE_PC_*");
+		pcvCount++;
 		//Ebt: BT.count()>=3
-		PropositionalContextVar<Integer> Ebt=new PropositionalContextVar<Integer>((short)9, "Ebt", ContextType.BT_COUNT, ContextOperator.GREATER_EQUAL, 3);
+		Ebt=new PropositionalContextVar<Integer>((short)9, "Ebt", ContextType.BT_COUNT, ContextOperator.GREATER_EQUAL, 3);
+		pcvCount++;
 		//At: Time>=MEETING_START
-		PropositionalContextVar<String> At=new PropositionalContextVar<String>((short)10, "At", ContextType.TIME, ContextOperator.GREATER_EQUAL, "MEETING_START");
+		At=new PropositionalContextVar<String>((short)10, "At", ContextType.TIME, ContextOperator.GREATER_EQUAL, "MEETING_START");
+		pcvCount++;
 		//Bt: Time>=MEETING_END
-		PropositionalContextVar<String> Bt=new PropositionalContextVar<String>((short)11, "Bt", ContextType.TIME, ContextOperator.GREATER_EQUAL, "MEETING_END");
+		Bt=new PropositionalContextVar<String>((short)11, "Bt", ContextType.TIME, ContextOperator.GREATER_EQUAL, "MEETING_END");
+		pcvCount++;
+		
 		
 		//construct 9 states
-		State general=new State((short)0, "General");
-		State outdoor=new State((short)1, "Outdoor");
-		State office=new State((short)2, "Office");
-		State jogging=new State((short)3, "Jogging");
-		State driving=new State((short)4, "Driving");
-		State drivingFast=new State((short)5, "DrivingFast");
-		State home=new State((short)6, "Home");
-		State meeting=new State((short)7, "Meeting");
-		State sync=new State((short)8, "Sync");
+		ArrayList<State> tempStateList=new ArrayList<State>();
+		general=new State((short)0, "General");
+		tempStateList.add(general);
+		stateCount++;
+		outdoor=new State((short)1, "Outdoor");
+		tempStateList.add(outdoor);
+		stateCount++;
+		office=new State((short)2, "Office");
+		tempStateList.add(office);
+		stateCount++;
+		jogging=new State((short)3, "Jogging");
+		tempStateList.add(jogging);
+		stateCount++;
+		driving=new State((short)4, "Driving");
+		tempStateList.add(driving);
+		stateCount++;
+		drivingFast=new State((short)5, "DrivingFast");
+		tempStateList.add(drivingFast);
+		stateCount++;
+		home=new State((short)6, "Home");
+		tempStateList.add(home);
+		stateCount++;
+		meeting=new State((short)7, "Meeting");
+		tempStateList.add(meeting);
+		stateCount++;
+		sync=new State((short)8, "Sync");
+		tempStateList.add(sync);
+		stateCount++;
+		
+		stateList=new State[stateCount];
+		for(int i=0;i<stateCount;i++){
+			stateList[i]=tempStateList.get(i);
+		}
+		tempStateList=null;
+		
 		
 		//construct 16 rules
 		//rule 1: ActivateOutdoor general-->outdoor Agps ^ !Bgps ^ !Cgps 5
+		ArrayList<Rule> tempList=new ArrayList<Rule>();
 		BooleanFunc temp=new BooleanFunc();
 		temp.getCVNoList().add(Agps.getNo());
 		temp.getCVNoList().add(Bgps.getNo());
@@ -62,7 +153,9 @@ public class Main {
 		temp.getForm().add(true);
 		temp.getForm().add(false);
 		temp.getForm().add(false);
-		Rule ActivateOutdoor=new Rule();
+		ActivateOutdoor=new Rule();
+		tempList.add(ActivateOutdoor);
+		ruleCount++;
 		ActivateOutdoor.setNo((short)0);
 		ActivateOutdoor.setName("ActivateOutdoor");
 		ActivateOutdoor.setCurrentStateNo(general.getNo());
@@ -74,7 +167,9 @@ public class Main {
 		ActivateOutdoor.getFullPredicate().add(temp);
 		
 		//rule 2: DeactivateOutdoor ourdoor-->general !(Agps ^ !Bgps ^ !Cgps) 5
-		Rule DeactivateOutdoor=new Rule();
+		DeactivateOutdoor=new Rule();
+		tempList.add(DeactivateOutdoor);
+		ruleCount++;
 		DeactivateOutdoor.setNo((short)1);
 		DeactivateOutdoor.setName("DeactivateOutdoor");
 		DeactivateOutdoor.setCurrentStateNo(outdoor.getNo());
@@ -93,7 +188,9 @@ public class Main {
 		temp.setSingle(false);
 		temp.getForm().add(true);
 		temp.getForm().add(true);
-		Rule ActivateJogging=new Rule();
+		ActivateJogging=new Rule();
+		tempList.add(ActivateJogging);
+		ruleCount++;
 		ActivateJogging.setNo((short)2);
 		ActivateJogging.setName("ActivateJogging");
 		ActivateJogging.setCurrentStateNo(outdoor.getNo());
@@ -105,7 +202,9 @@ public class Main {
 		ActivateJogging.getFullPredicate().add(temp);
 		
 		//rule 4: DeactivateJogging jogging-->outdoor !(Agps ^ Dgps) 5
-		Rule DeactivateJogging=new Rule();
+		DeactivateJogging=new Rule();
+		tempList.add(DeactivateJogging);
+		ruleCount++;
 		DeactivateJogging.setNo((short)3);
 		DeactivateJogging.setName("DeactivateJogging");
 		DeactivateJogging.setCurrentStateNo(jogging.getNo());
@@ -122,7 +221,9 @@ public class Main {
 		temp.setConn((byte)-1);
 		temp.setSingle(true);
 		temp.getForm().add(true);
-		Rule ActivateDriving1=new Rule();
+		ActivateDriving1=new Rule();
+		tempList.add(ActivateDriving1);
+		ruleCount++;
 		ActivateDriving1.setNo((short)4);
 		ActivateDriving1.setName("ActivateDriving");
 		ActivateDriving1.setCurrentStateNo(general.getNo());
@@ -134,7 +235,9 @@ public class Main {
 		ActivateDriving1.getFullPredicate().add(temp);
 		
 		//rule 6: ActivateDriving home-->driving Abt 1
-		Rule ActivateDriving2=new Rule();
+		ActivateDriving2=new Rule();
+		tempList.add(ActivateDriving2);
+		ruleCount++;
 		ActivateDriving2.setNo((short)5);
 		ActivateDriving2.setName("ActivateDriving");
 		ActivateDriving2.setCurrentStateNo(home.getNo());
@@ -146,7 +249,9 @@ public class Main {
 		ActivateDriving2.getFullPredicate().add(temp);
 		
 		//rule 7: ActivateDriving office-->driving Abt 1
-		Rule ActivateDriving3=new Rule();
+		ActivateDriving3=new Rule();
+		tempList.add(ActivateDriving3);
+		ruleCount++;
 		ActivateDriving3.setNo((short)6);
 		ActivateDriving3.setName("ActivateDriving");
 		ActivateDriving3.setCurrentStateNo(office.getNo());
@@ -158,7 +263,9 @@ public class Main {
 		ActivateDriving3.getFullPredicate().add(temp);
 		
 		//rule 8: ActivateDriving outdoor-->driving Abt 1
-		Rule ActivateDriving4=new Rule();
+		ActivateDriving4=new Rule();
+		tempList.add(ActivateDriving4);
+		ruleCount++;
 		ActivateDriving4.setNo((short)7);
 		ActivateDriving4.setName("ActivateDriving");
 		ActivateDriving4.setCurrentStateNo(outdoor.getNo());
@@ -170,7 +277,9 @@ public class Main {
 		ActivateDriving4.getFullPredicate().add(temp);
 		
 		//rule 9: DeactivateDriving driving-->general !Abt 1
-		Rule DeactivateDriving=new Rule();
+		DeactivateDriving=new Rule();
+		tempList.add(DeactivateDriving);
+		ruleCount++;
 		DeactivateDriving.setNo((short)8);
 		DeactivateDriving.setName("DeactivateDriving");
 		DeactivateDriving.setCurrentStateNo(driving.getNo());
@@ -189,7 +298,9 @@ public class Main {
 		temp.setSingle(false);
 		temp.getForm().add(true);
 		temp.getForm().add(true);
-		Rule ActivateDrivingFast=new Rule();
+		ActivateDrivingFast=new Rule();
+		tempList.add(ActivateDrivingFast);
+		ruleCount++;
 		ActivateDrivingFast.setNo((short)9);
 		ActivateDrivingFast.setName("ActivateDrivingFast");
 		ActivateDrivingFast.setCurrentStateNo(driving.getNo());
@@ -201,7 +312,9 @@ public class Main {
 		ActivateDrivingFast.getFullPredicate().add(temp);
 		
 		//rule 11: DeactivateDrivingFast drivingfast-->driving !(Agps ^ Egps) 0
-		Rule DeactivateDrivingFast=new Rule();
+		DeactivateDrivingFast=new Rule();
+		tempList.add(DeactivateDrivingFast);
+		ruleCount++;
 		DeactivateDrivingFast.setNo((short)10);
 		DeactivateDrivingFast.setName("DeactivateDrivingFast");
 		DeactivateDrivingFast.setCurrentStateNo(drivingFast.getNo());
@@ -225,7 +338,9 @@ public class Main {
 		temp1.setSingle(false);
 		temp1.getForm().add(true);
 		temp1.getForm().add(true);
-		Rule ActivateHome=new Rule();
+		ActivateHome=new Rule();
+		tempList.add(ActivateHome);
+		ruleCount++;
 		ActivateHome.setNo((short)11);
 		ActivateHome.setName("ActivateHome");
 		ActivateHome.setCurrentStateNo(general.getNo());
@@ -238,7 +353,9 @@ public class Main {
 		ActivateHome.getFullPredicate().add(temp1);
 		
 		//rule 13: DeactivateHome home-->general !(Bbt v (Agps ^ Bgps)) 5
-		Rule DeactivateHome=new Rule();
+		DeactivateHome=new Rule();
+		tempList.add(DeactivateHome);
+		ruleCount++;
 		DeactivateHome.setNo((short)12);
 		DeactivateHome.setName("DeactivateHome");
 		DeactivateHome.setCurrentStateNo(home.getNo());
@@ -268,7 +385,9 @@ public class Main {
 		temp2.setSingle(false);
 		temp2.getForm().add(true);
 		temp2.getForm().add(true);
-		Rule ActivateOffice=new Rule();
+		ActivateOffice=new Rule();
+		tempList.add(ActivateOffice);
+		ruleCount++;
 		ActivateOffice.setNo((short)13);
 		ActivateOffice.setName("ActivateOffice");
 		ActivateOffice.setCurrentStateNo(general.getNo());
@@ -282,7 +401,9 @@ public class Main {
 		ActivateOffice.getFullPredicate().add(temp2);
 		
 		//rule 15: DeactivateOffice office-->general !(Cbt v Dbt v (Agps ^ Cgps)) 5
-		Rule DeactivateOffice=new Rule();
+		DeactivateOffice=new Rule();
+		tempList.add(DeactivateOffice);
+		ruleCount++;
 		DeactivateOffice.setNo((short)14);
 		DeactivateOffice.setName("DeactivateOffice");
 		DeactivateOffice.setCurrentStateNo(office.getNo());
@@ -303,7 +424,9 @@ public class Main {
 		temp.setSingle(false);
 		temp.getForm().add(true);
 		temp.getForm().add(true);
-		Rule ActivateMeeting=new Rule();
+		ActivateMeeting=new Rule();
+		tempList.add(ActivateMeeting);
+		ruleCount++;
 		ActivateMeeting.setNo((short)15);
 		ActivateMeeting.setName("ActivateMeeting");
 		ActivateMeeting.setCurrentStateNo(office.getNo());
@@ -320,7 +443,9 @@ public class Main {
 		temp.setConn((byte)-1);
 		temp.setSingle(true);
 		temp.getForm().add(true);
-		Rule DeactivateMeeting=new Rule();
+		DeactivateMeeting=new Rule();
+		tempList.add(DeactivateMeeting);
+		ruleCount++;
 		DeactivateMeeting.setNo((short)16);
 		DeactivateMeeting.setName("DeactivateMeeting");
 		DeactivateMeeting.setCurrentStateNo(meeting.getNo());
@@ -339,7 +464,9 @@ public class Main {
 		temp.setSingle(false);
 		temp.getForm().add(true);
 		temp.getForm().add(true);
-		Rule ActivateSync=new Rule();
+		ActivateSync=new Rule();
+		tempList.add(ActivateSync);
+		ruleCount++;
 		ActivateSync.setNo((short)17);
 		ActivateSync.setName("ActivateSync");
 		ActivateSync.setCurrentStateNo(general.getNo());
@@ -351,16 +478,209 @@ public class Main {
 		ActivateSync.getFullPredicate().add(temp);
 		
 		//rule 19: DeactivateSync sync-->general !(Bbt v Cbt) 9
-		Rule DeactivateSync=new Rule();
-		ActivateSync.setNo((short)18);
-		ActivateSync.setName("DeactivateSync");
-		ActivateSync.setCurrentStateNo(sync.getNo());
-		ActivateSync.setNewStateNo(general.getNo());
-		ActivateSync.setIsSingle(true);
-		ActivateSync.setConn((byte)-1);
-		ActivateSync.setForm(false);
-		ActivateSync.setPriority((byte)9);
-		ActivateSync.getFullPredicate().add(temp);
+		DeactivateSync=new Rule();
+		tempList.add(DeactivateSync);
+		ruleCount++;
+		DeactivateSync.setNo((short)18);
+		DeactivateSync.setName("DeactivateSync");
+		DeactivateSync.setCurrentStateNo(sync.getNo());
+		DeactivateSync.setNewStateNo(general.getNo());
+		DeactivateSync.setIsSingle(true);
+		DeactivateSync.setConn((byte)-1);
+		DeactivateSync.setForm(false);
+		DeactivateSync.setPriority((byte)9);
+		DeactivateSync.getFullPredicate().add(temp);
+		
+		temp=null;
+		temp1=null;
+		temp2=null;
+//		System.out.println(pcvCount);
+//		System.out.println(stateCount);
+//		System.out.println(ruleCount);
+		ruleList=new Rule[ruleCount];
+		for(int i=0;i<ruleCount;i++){
+			ruleList[i]=tempList.get(i);
+		}
+		
+		StateMatrix[] smList=new StateMatrix[stateCount];
+		for(int i=0;i<stateCount;i++){
+			smList[i]=constructStateMatrix(stateList[i]);
+		}
+		
+		//undeterminismDetection(stateList[0], smList[0]);
+		for(int i=0;i<smList[0].getMatrix().size();i++){
+			out(smList[0].getMatrix().get(i));
+			System.out.println();
+			
+		}
+	}
+	
+	public static boolean globalConstriantsSatisfied(boolean[] smRow){
+		//!Agps -> (!Bgps ^ !Cgps ^ !Dgps ^ !Egps)
+		if(!smRow[Agps.getNo()]){
+			if(smRow[Bgps.getNo()]){
+				return false;
+			}
+			if(smRow[Cgps.getNo()]){
+				return false;
+			}
+			if(smRow[Dgps.getNo()]){
+				return false;
+			}
+			if(smRow[Egps.getNo()]){
+				return false;
+			}
+		}
+		
+		//(Bgps=>!Cgps) ^ (Cgps=>!Bgps) locations are mutually exclusive
+		if(smRow[Bgps.getNo()]==true && smRow[Cgps.getNo()]==true){
+			return false;
+		}
+		
+		//Egps=>Dgps
+		if(smRow[Egps.getNo()] && !smRow[Dgps.getNo()]){
+			return false;
+		}
+		
+		//Bt=>At
+		if(smRow[Bt.getNo()] && !smRow[At.getNo()]){
+			return false;
+		}
+		return true;
+	}
+	
+	public static StateMatrix constructStateMatrix(State s){
+		StateMatrix sm=new StateMatrix();
+		ArrayList<Rule> relatedRules=new ArrayList<Rule>();
+		for(int i=0;i<ruleCount;i++){
+			if(ruleList[i].getCurrentStateNo()==s.getNo()){
+				relatedRules.add(ruleList[i]);
+			}
+		}
+		boolean[] pcvValueList=new boolean[pcvCount];
+		explore(pcvValueList,0,sm,relatedRules);
+		return sm;
+		
+	}
+	
+	public static void explore(boolean[] blist,int i,StateMatrix sm,ArrayList<Rule> relatedRuleList){
+		if(i==blist.length-1){
+			//first case
+			blist[i]=false;
+			boolean flag=false;
+			ArrayList<Rule> ruleList=new ArrayList<Rule>();
+			if(globalConstriantsSatisfied(blist)){
+				for(int j=0;j<relatedRuleList.size();j++){
+					if(relatedRuleList.get(j).satisfied(blist)){
+						flag=true;
+						ruleList.add(relatedRuleList.get(j));
+					}
+				}
+			}
+			if(flag){
+				//first remove rules with low priority in rule list
+				if(ruleList.size()>1){
+					byte min=Byte.MAX_VALUE;
+					for(int j=0;j<ruleList.size();j++){
+						byte temp=ruleList.get(j).getPriority();
+						if(temp<min){
+							min=temp;
+						}
+					}
+					ArrayList<Integer> toDelete=new ArrayList<Integer>();
+					for(int j=0;j<ruleList.size();j++){
+						byte temp=ruleList.get(j).getPriority();
+						if(temp>min){
+							toDelete.add(j);
+						}
+					}
+					for(int j=0;j<toDelete.size();j++){
+						ruleList.remove(toDelete.get(j));
+					}
+				}
+				sm.getMatrix().add(blist.clone());
+				//out(blist);
+				sm.getRuleListList().add(ruleList);
+				//printRule(ruleList);
+				//System.out.println();
+			}
+			
+			//second case
+			blist[i]=true;
+			flag=false;
+			ruleList=new ArrayList<Rule>();
+			if(globalConstriantsSatisfied(blist)){
+				for(int j=0;j<relatedRuleList.size();j++){
+					if(relatedRuleList.get(j).satisfied(blist)){
+						flag=true;
+						ruleList.add(relatedRuleList.get(j));
+					}
+				}
+			}
+			if(flag){
+				//first remove rules with low priority in rule list
+				if(ruleList.size()>1){
+					byte min=Byte.MAX_VALUE;
+					for(int j=0;j<ruleList.size();j++){
+						byte temp=ruleList.get(j).getPriority();
+						if(temp<min){
+							min=temp;
+						}
+					}
+					ArrayList<Integer> toDelete=new ArrayList<Integer>();
+					for(int j=0;j<ruleList.size();j++){
+						byte temp=ruleList.get(j).getPriority();
+						if(temp>min){
+							toDelete.add(j);
+						}
+					}
+					for(int j=0;j<toDelete.size();j++){
+						ruleList.remove(toDelete.get(j));
+					}
+				}
+				sm.getMatrix().add(blist);
+				//out(blist);
+				sm.getRuleListList().add(ruleList);
+				//printRule(ruleList);
+				//System.out.println();
+			}
+		}
+		else{
+			blist[i]=false;
+			explore(blist,i+1,sm,relatedRuleList);
+			blist[i]=true;
+			explore(blist,i+1,sm,relatedRuleList);
+		}
+		
+	}
+	public static void out(boolean[] blist){
+		for(int i=0;i<blist.length;i++){
+			if(blist[i]){
+				System.out.print(1+"\t");
+			}
+			else{
+				System.out.print(0+"\t");
+			}
+		}
+		//System.out.println();
+	}
+	public static void printRule(ArrayList<Rule> rlist){
+		for(int i=0;i<rlist.size();i++){
+			System.out.print(rlist.get(i).getName()+"\t");
+		}
+	}
+	
+	public static void undeterminismDetection(State s,StateMatrix sm){
+		for(int i=0;i<sm.getMatrix().size();i++){
+			out(sm.getMatrix().get(i));
+			printRule(sm.getRuleListList().get(i));
+			System.out.println();
+//			if(sm.getRuleListList().get(i).size()>1){
+//				out(sm.getMatrix().get(i));
+//				//printRule(sm.getRuleListList().get(i));
+//				//System.out.println();
+//			}
+		}
 	}
 
 }

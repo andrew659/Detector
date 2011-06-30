@@ -75,7 +75,7 @@ public class Rule {
 	/*
 	 * leave us one question, after getting full predicate and its form, how to evaluate it?
 	 */
-	public boolean satisfied(ArrayList<Boolean> blist){
+	public boolean satisfied(boolean[] blist){
 		if(isSingle){
 			if(form){
 				return fullPredicate.get(0).satisfied(blist);
