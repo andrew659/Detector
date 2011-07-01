@@ -508,7 +508,30 @@ public class Main {
 			smList[i]=constructStateMatrix(stateList[i]);
 		}
 		
-		undeterminismDetection(stateList[1], smList[1]);
+		boolean checkUndeterminism=false;
+		boolean checkDeadPredicate=false;
+		boolean checkAdaptationRace=false;
+		boolean checkUnreachability=true;
+		
+		if(checkUndeterminism){
+			for(int i=0;i<stateList.length;i++){
+				undeterminismDetection(stateList[i], smList[i]);
+			}
+		}
+		
+		if(checkDeadPredicate){
+			for(int i=0;i<stateList.length;i++){
+				deadPredicateDetection(stateList[i], smList[i]);
+			}
+		}
+		
+		if(checkAdaptationRace){
+			
+		}
+		
+		if(checkUnreachability){
+			unreachableStateDetection(general, smList);
+		}
 	}
 	
 	public static boolean globalConstriantsSatisfied(boolean[] smRow){
@@ -547,16 +570,21 @@ public class Main {
 	
 	public static StateMatrix constructStateMatrix(State s){
 		StateMatrix sm=new StateMatrix();
-		ArrayList<Rule> relatedRules=new ArrayList<Rule>();
-		for(int i=0;i<ruleCount;i++){
-			if(ruleList[i].getCurrentStateNo()==s.getNo()){
-				relatedRules.add(ruleList[i]);
-			}
-		}
+		ArrayList<Rule> relatedRules=getActiveRules(s);
 		boolean[] pcvValueList=new boolean[pcvCount];
 		explore(pcvValueList,0,sm,relatedRules);
 		return sm;
 		
+	}
+	
+	public static ArrayList<Rule> getActiveRules(State s){
+		ArrayList<Rule> activeRules=new ArrayList<Rule>();
+		for(int i=0;i<ruleCount;i++){
+			if(ruleList[i].getCurrentStateNo()==s.getNo()){
+				activeRules.add(ruleList[i]);
+			}
+		}
+		return activeRules;
 	}
 	
 	public static void explore(boolean[] blist,int i,StateMatrix sm,ArrayList<Rule> relatedRuleList){
@@ -580,13 +608,6 @@ public class Main {
 			if(flag){
 				//first remove rules with low priority in rule list
 				if(ruleList.size()>1){
-//					byte min=Byte.MAX_VALUE;
-//					for(int j=0;j<ruleList.size();j++){
-//						byte temp=ruleList.get(j).getPriority();
-//						if(temp<min){
-//							min=temp;
-//						}
-//					}
 					ArrayList<Rule> toDelete=new ArrayList<Rule>();
 					for(int j=0;j<ruleList.size();j++){
 						byte temp=ruleList.get(j).getPriority();
@@ -624,13 +645,6 @@ public class Main {
 			if(flag){
 				//first remove rules with low priority in rule list
 				if(ruleList.size()>1){
-//					byte min=Byte.MAX_VALUE;
-//					for(int j=0;j<ruleList.size();j++){
-//						byte temp=ruleList.get(j).getPriority();
-//						if(temp<min){
-//							min=temp;
-//						}
-//					}
 					ArrayList<Rule> toDelete=new ArrayList<Rule>();
 					for(int j=0;j<ruleList.size();j++){
 						byte temp=ruleList.get(j).getPriority();
@@ -682,6 +696,58 @@ public class Main {
 				printRule(sm.getRuleListList().get(i));
 				System.out.println();
 			}
+		}
+	}
+	
+	public static void deadPredicateDetection(State s,StateMatrix sm){
+		//get active rules
+		ArrayList<Rule> untriggeredRules=getActiveRules(s);
+		int size=untriggeredRules.size();
+		for(int i=0;i<sm.getMatrix().size();i++){
+			if(untriggeredRules.size()==0){
+				break;
+			}
+			untriggeredRules.removeAll(sm.getRuleListList().get(i));
+		}
+		if(untriggeredRules.size()!=0){
+			System.out.println("in state "+s.getName()+" the following rules are dead");
+			printRule(untriggeredRules);
+			System.out.println();
+		}
+		if(untriggeredRules.size()==size){
+			System.out.println("the state "+s.getName()+" is dead");
+		}
+	}
+	
+	public static void unreachableStateDetection(State initialState,StateMatrix[] smList){
+		ArrayList<State> next=new ArrayList<State>();
+		next.add(initialState);
+		ArrayList<State> toExplore=new ArrayList<State>();
+		ArrayList<State> unreached=new ArrayList<State>();
+		for(int i=0;i<stateList.length;i++){
+			unreached.add(stateList[i]);
+		}
+		while(next.size()!=0){
+			for(int i=0;i<next.size();i++){
+				unreached.remove(next.get(i));
+				//System.out.println(unreached.size());
+				StateMatrix sm=smList[next.get(i).getNo()];
+				for(int j=0;j<sm.getMatrix().size();j++){
+					ArrayList<Rule> r=sm.getRuleListList().get(j);
+					//printRule(r);
+					for(int k=0;k<r.size();k++){
+						if(unreached.contains(stateList[r.get(k).getNewStateNo()])){
+							//System.out.println("add...");
+							toExplore.add(stateList[r.get(k).getNewStateNo()]);
+						}
+					}
+				}
+			}
+			next=toExplore;
+			toExplore=new ArrayList<State>();
+		}
+		for(int i=0;i<unreached.size();i++){
+			System.out.println(unreached.get(i).getName()+" is unreachable from initial state");
 		}
 	}
 
