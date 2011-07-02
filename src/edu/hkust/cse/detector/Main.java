@@ -1,7 +1,7 @@
 package edu.hkust.cse.detector;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Random;
 
 /**
  * @author andrew	Jun 28, 2011
@@ -63,6 +63,10 @@ public class Main {
 	private static Rule DeactivateSync;
 	private static int ruleCount=0;
 	private static Rule[] ruleList;
+	
+	private static int raceCount=0;
+	private static int cycleCount=0;
+	private static int fpCount=0;
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -509,9 +513,9 @@ public class Main {
 		}
 		
 		boolean checkUndeterminism=false;
-		boolean checkDeadPredicate=false;
+		boolean checkDeadPredicate=true;
 		boolean checkAdaptationRace=false;
-		boolean checkUnreachability=true;
+		boolean checkUnreachability=false;
 		
 		if(checkUndeterminism){
 			for(int i=0;i<stateList.length;i++){
@@ -526,12 +530,18 @@ public class Main {
 		}
 		
 		if(checkAdaptationRace){
-			
+			for(int i=0;i<stateList.length;i++){
+				adaptationRaceDetection(stateList[i],smList[i]);
+			}
 		}
 		
 		if(checkUnreachability){
 			unreachableStateDetection(general, smList);
 		}
+		
+		System.out.println("cycleCount="+cycleCount);
+		System.out.println("raceCount="+raceCount);
+		System.out.println("fpCount="+fpCount);
 	}
 	
 	public static boolean globalConstriantsSatisfied(boolean[] smRow){
@@ -675,10 +685,10 @@ public class Main {
 	public static void out(boolean[] blist){
 		for(int i=0;i<blist.length;i++){
 			if(blist[i]){
-				System.out.print(1+"\t");
+				System.out.print(1+" ");
 			}
 			else{
-				System.out.print(0+"\t");
+				System.out.print(0+" ");
 			}
 		}
 		//System.out.println();
@@ -719,6 +729,9 @@ public class Main {
 		}
 	}
 	
+	/*
+	 * this algorithm is too slow, but the result is correct
+	 */
 	public static void unreachableStateDetection(State initialState,StateMatrix[] smList){
 		ArrayList<State> next=new ArrayList<State>();
 		next.add(initialState);
@@ -749,6 +762,156 @@ public class Main {
 		for(int i=0;i<unreached.size();i++){
 			System.out.println(unreached.get(i).getName()+" is unreachable from initial state");
 		}
+	}
+	
+	/*
+	 * randomly choose one rule if there is undeterminism
+	 */
+	public static void adaptationRaceDetection(State s,StateMatrix sm){
+		//System.out.println(sm.getMatrix().size());
+		//
+		for(int i=0;i<sm.getMatrix().size();i++){
+			//System.out.println(i);
+			boolean[] blist=sm.getMatrix().get(i);
+			ArrayList<Short> rlist=new ArrayList<Short>(); //explored rules
+			ArrayList<Short> slist=new ArrayList<Short>(); //explored states
+			boolean isCycle=false;
+			ArrayList<Rule> satisfiedRules=sm.getRuleListList().get(i);
+			Random rand=new Random();
+			int random=0;
+			if(satisfiedRules.size()>1){
+				random=rand.nextInt(satisfiedRules.size());
+			}
+			short rNo=satisfiedRules.get(random).getNo();
+			State destState=stateList[ruleList[rNo].getNewStateNo()];
+//			boolean flag=slist.contains((Short)destState.getNo());
+			while(destState!=null){
+				//System.out.println(destState.getNo());
+				//System.out.print(".");
+				if(slist.contains((Short)destState.getNo()) || destState.getNo()==s.getNo()){
+					isCycle=true;
+					rlist.add(rNo);
+					slist.add(destState.getNo());
+					break;
+				}
+				rlist.add(rNo);
+				slist.add(destState.getNo());
+				ArrayList<Rule> activeRules=getActiveRules(destState);
+				//remove those rules which can not be satisfied by blist
+				ArrayList<Rule> toDelete=new ArrayList<Rule>();
+				for(int j=0;j<activeRules.size();j++){
+					byte temp=activeRules.get(j).getPriority();
+					if(!activeRules.get(j).satisfied(blist)){
+						toDelete.add(activeRules.get(j));
+					}
+				}
+				for(int j=0;j<toDelete.size();j++){
+					//System.out.println("remove");
+					activeRules.removeAll(toDelete);
+				}
+				
+				byte min=Byte.MAX_VALUE;
+				for(int j=0;j<activeRules.size();j++){
+					if(activeRules.get(j).getPriority()<min){
+						min=activeRules.get(j).getPriority();
+					}
+				}
+				if(activeRules.size()>1){
+					toDelete=new ArrayList<Rule>();
+					for(int j=0;j<activeRules.size();j++){
+						byte temp=activeRules.get(j).getPriority();
+						if(temp>min){
+							toDelete.add(activeRules.get(j));
+						}
+					}
+					for(int j=0;j<toDelete.size();j++){
+						//System.out.println("remove");
+						activeRules.removeAll(toDelete);
+					}
+				}
+				if(activeRules.size()>1){
+					random=rand.nextInt(activeRules.size());
+				}
+				else{
+					random=0;
+				}
+				if(activeRules.size()>0){
+					rNo=activeRules.get(random).getNo();
+					destState=stateList[ruleList[rNo].getNewStateNo()];
+//					flag=slist.contains((Short)destState.getNo());
+				}
+				else{
+					destState=null;
+//					flag=true;
+				}
+			}
+			if(slist.size()>2){
+				if(isCycle){
+					
+					if(isPossible(blist)){
+						cycleCount++;
+						System.out.print("cycle:");
+						out(blist);
+						System.out.print("\t"+s.getNo());
+						for(int k=0;k<slist.size();k++){
+							System.out.print("--<"+rlist.get(k)+">--");
+							System.out.print(slist.get(k));
+						}
+						System.out.println();
+					}
+					else{
+						fpCount++;
+					}
+					
+				}
+				else{
+					
+					if(isPossible(blist)){
+						raceCount++;
+						System.out.print("race:");
+						out(blist);
+						System.out.print("\t"+s.getNo());
+						for(int k=0;k<slist.size();k++){
+							System.out.print("--<"+rlist.get(k)+">--");
+							System.out.print(slist.get(k));
+						}
+						System.out.println();
+					}
+					else{
+						fpCount++;
+					}
+					
+					
+				}
+			}
+		}
+		
+	}
+	
+	//more constraints to remove false positives
+	public static boolean isPossible(boolean[] blist){
+		if(blist[Bbt.getNo()] && blist[Cbt.getNo()]){
+			return false;
+		}
+		
+		if(blist[Bbt.getNo()] && blist[Dbt.getNo()]){
+			return false;
+		}
+		
+		if(blist[Bgps.getNo()] && blist[Cbt.getNo()]){
+			return false;
+		}
+		
+		if(blist[Bgps.getNo()] && blist[Dbt.getNo()]){
+			return false;
+		}
+		
+		if(blist[Cgps.getNo()] && blist[Bbt.getNo()]){
+			return false;
+		}
+		
+		
+		return true;
 	}
 
 }
