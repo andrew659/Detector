@@ -512,8 +512,8 @@ public class Main {
 			smList[i]=constructStateMatrix(stateList[i]);
 		}
 		
-		boolean checkUndeterminism=false;
-		boolean checkDeadPredicate=true;
+		boolean checkUndeterminism=true;
+		boolean checkDeadPredicate=false;
 		boolean checkAdaptationRace=false;
 		boolean checkUnreachability=false;
 		
