@@ -344,6 +344,7 @@ public class ConfidenceTable {
 		
 	}
 	
+	//hard coding, for test constraint network(confidence table) only
 	public static boolean constraintsSat(boolean[] list){
 		if(list[0]==false){
 			if(list[1]==true || list[2]==true || list[3]==true || list[4]==true){

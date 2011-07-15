@@ -1,5 +1,6 @@
 package edu.hkust.cse.simulator;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -23,14 +24,12 @@ public class PhoneAdapterSimulator {
 	private final static int Bt=11;
 	
 	
-	public static void main(String[] args){
-		long start=System.currentTimeMillis();
-		for(int i=0;i<100;i++){
-			randomGen(12);
-			System.out.println();
+	public static ArrayList<boolean[]> simulate(int numberOfEvents){
+		ArrayList<boolean[]> eventList=new ArrayList<boolean[]>();
+		for(int i=0;i<numberOfEvents;i++){
+			eventList.add(randomGen(12));
 		}
-		long end=System.currentTimeMillis();
-		System.out.println(end-start+"ms");
+		return eventList;
 	}
 	
 	public static boolean[] randomGen(int num){
@@ -40,13 +39,13 @@ public class PhoneAdapterSimulator {
 			for(int i=0;i<num;i++){
 				list[i]=rand.nextBoolean();
 			}
-			if(globalConstriantsSatisfied(list)&&isPossible(list)){
+			if(globalConstriantsSatisfied(list) && isPossible(list)){
 				break;
 			}
 		}
-		for(int i=0;i<num;i++){
-			System.out.print(list[i]);
-		}
+//		for(int i=0;i<num;i++){
+//			System.out.print(list[i]);
+//		}
 		return list;
 		
 	}
