@@ -72,6 +72,19 @@ public class Rule {
 	public void setPriority(byte np){
 		this.priority=np;
 	}
+	public ArrayList<Short> getPCVs(){
+		ArrayList<Short> result=new ArrayList<Short>();
+		ArrayList<Short> temp;
+		for(int i=0;i<this.fullPredicate.size();i++){
+			temp=fullPredicate.get(i).getCVNoList();
+			for(int j=0;j<temp.size();j++){
+				if(!result.contains(temp.get(j))){
+					result.add(temp.get(j));
+				}
+			}
+		}
+		return result;
+	}
 	/*
 	 * leave us one question, after getting full predicate and its form, how to evaluate it?
 	 */

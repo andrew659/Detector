@@ -68,7 +68,8 @@ public class Main {
 	private static int cycleCount=0;
 	private static int fpCount=0;
 	
-	public static void main(String[] args) {
+	//public static void main(String[] args) {
+	public static ArrayList<PCVAssignmentsWithIndex> detection(boolean undeterminism,boolean deadPredicate,boolean deadState,boolean adaptationRace,boolean unreachability){
 		// TODO Auto-generated method stub
 		//construct 12 propositional context variables
 		//Agps: GPS.isValid()
@@ -512,15 +513,20 @@ public class Main {
 			smList[i]=constructStateMatrix(stateList[i]);
 		}
 		
-		boolean checkUndeterminism=true;
-		boolean checkDeadPredicate=false;
-		boolean checkAdaptationRace=false;
-		boolean checkUnreachability=false;
+		boolean checkUndeterminism=undeterminism;
+		boolean checkDeadPredicate=deadPredicate;
+		boolean checkAdaptationRace=adaptationRace;
+		boolean checkUnreachability=unreachability;
 		
+		ArrayList<PCVAssignmentsWithIndex> faults=new ArrayList<PCVAssignmentsWithIndex>();
+		PCVAssignmentsWithIndex tempR;
 		if(checkUndeterminism){
-			for(int i=0;i<stateList.length;i++){
-				undeterminismDetection(stateList[i], smList[i]);
-			}
+			//for(int i=0;i<stateList.length;i++){
+				tempR=undeterminismDetection(stateList[0], smList[0]);
+				if(tempR.getPCVValueList().size()>0){
+					faults.add(tempR);
+				}				
+			//}
 		}
 		
 		if(checkDeadPredicate){
@@ -531,7 +537,11 @@ public class Main {
 		
 		if(checkAdaptationRace){
 			for(int i=0;i<stateList.length;i++){
-				adaptationRaceDetection(stateList[i],smList[i]);
+				//adaptationRaceDetection(stateList[i],smList[i]);
+				tempR=adaptationRaceDetection(stateList[i], smList[i]);
+				if(tempR.getPCVValueList().size()>0){
+					faults.add(tempR);
+				}	
 			}
 		}
 		
@@ -539,12 +549,15 @@ public class Main {
 			unreachableStateDetection(general, smList);
 		}
 		
-		System.out.println("cycleCount="+cycleCount);
-		System.out.println("raceCount="+raceCount);
-		System.out.println("fpCount="+fpCount);
+//		System.out.println("cycleCount="+cycleCount);
+//		System.out.println("raceCount="+raceCount);
+		//System.out.println("fpCount="+fpCount);
+		
+		return faults;
 	}
 	
 	public static boolean globalConstriantsSatisfied(boolean[] smRow){
+		//return true;
 		//!Agps -> (!Bgps ^ !Cgps ^ !Dgps ^ !Egps)
 		if(!smRow[Agps.getNo()]){
 			if(smRow[Bgps.getNo()]){
@@ -597,6 +610,40 @@ public class Main {
 		return activeRules;
 	}
 	
+	public static ArrayList<Short> getRelatedPCVs(State s){
+		ArrayList<Short> result=new ArrayList<Short>();
+		ArrayList<Short> temp;
+		for(int i=0;i<ruleCount;i++){
+			if(ruleList[i].getCurrentStateNo()==s.getNo()){
+				temp=ruleList[i].getPCVs();
+				for(int j=0;j<temp.size();j++){
+					if(!result.contains(temp.get(j))){
+						result.add(temp.get(j));
+					}
+				}
+			}
+		}
+//		System.out.println("pcv no list before ranking");
+//		for(int i=0;i<result.size();i++){
+//			System.out.print(result.get(i)+"\t");
+//		}
+		//sort the list of pcv no
+		for(int i=0;i<result.size()-1;i++){
+			for(int j=0;j<result.size()-1-i;j++){
+				if(result.get(j)>result.get(j+1)){
+					Short tempS=result.get(j);
+					result.set(j, result.get(j+1));
+					result.set(j+1,tempS);
+				}
+			}
+		}
+//		System.out.println("\nafter ranking");
+//		for(int i=0;i<result.size();i++){
+//			System.out.print(result.get(i)+"\t");
+//		}
+		return result;
+	}
+	
 	public static void explore(boolean[] blist,int i,StateMatrix sm,ArrayList<Rule> relatedRuleList){
 		if(i==blist.length-1){
 			//first case
@@ -604,6 +651,7 @@ public class Main {
 			boolean flag=false;
 			byte min=Byte.MAX_VALUE;
 			ArrayList<Rule> ruleList=new ArrayList<Rule>();
+			//!!!!!!!!!!!!!!!!!!!!!!!! changed
 			if(globalConstriantsSatisfied(blist)){
 				for(int j=0;j<relatedRuleList.size();j++){
 					if(relatedRuleList.get(j).satisfied(blist)){
@@ -699,14 +747,35 @@ public class Main {
 		}
 	}
 	
-	public static void undeterminismDetection(State s,StateMatrix sm){
+	public static PCVAssignmentsWithIndex undeterminismDetection(State s,StateMatrix sm){
+		PCVAssignmentsWithIndex result=new PCVAssignmentsWithIndex();
+		ArrayList<Short> relatedPCVs=getRelatedPCVs(s);
+		int size=relatedPCVs.size();
+		boolean[] temp;
+		boolean[] old;
+		ArrayList<boolean[]> faults=new ArrayList<boolean[]>();
 		for(int i=0;i<sm.getMatrix().size();i++){
 			if(sm.getRuleListList().get(i).size()>1){
-				out(sm.getMatrix().get(i));
-				printRule(sm.getRuleListList().get(i));
-				System.out.println();
+				//faults.add(sm.getMatrix().get(i));
+				//remove unrelated pcv values
+				old=sm.getMatrix().get(i);
+				temp=new boolean[size];
+				for(int j=0;j<size;j++){
+					temp[j]=old[relatedPCVs.get(j)];
+				}
+				//function contains does not work
+				//if(!faults.contains(temp)){
+					faults.add(temp);
+				//}
+				//out(sm.getMatrix().get(i));
+				//printRule(sm.getRuleListList().get(i));
+				//System.out.println();
 			}
 		}
+		faults=trimList(faults);
+		result.setPCVIndexList(relatedPCVs);
+		result.setPCVValueList(faults);
+		return result;
 	}
 	
 	public static void deadPredicateDetection(State s,StateMatrix sm){
@@ -767,9 +836,13 @@ public class Main {
 	/*
 	 * randomly choose one rule if there is undeterminism
 	 */
-	public static void adaptationRaceDetection(State s,StateMatrix sm){
+	public static PCVAssignmentsWithIndex adaptationRaceDetection(State s,StateMatrix sm){
 		//System.out.println(sm.getMatrix().size());
 		//
+		PCVAssignmentsWithIndex result=new PCVAssignmentsWithIndex();
+		for(int i=0;i<pcvCount;i++){
+			result.getPCVIndexList().add((short)i);
+		}
 		for(int i=0;i<sm.getMatrix().size();i++){
 			//System.out.println(i);
 			boolean[] blist=sm.getMatrix().get(i);
@@ -850,14 +923,15 @@ public class Main {
 					
 					if(isPossible(blist)){
 						cycleCount++;
-						System.out.print("cycle:");
-						out(blist);
-						System.out.print("\t"+s.getNo());
-						for(int k=0;k<slist.size();k++){
-							System.out.print("--<"+rlist.get(k)+">--");
-							System.out.print(slist.get(k));
-						}
-						System.out.println();
+//						System.out.print("cycle:");
+//						out(blist);
+//						System.out.print("\t"+s.getNo());
+//						for(int k=0;k<slist.size();k++){
+//							System.out.print("--<"+rlist.get(k)+">--");
+//							System.out.print(slist.get(k));
+//						}
+//						System.out.println();
+						result.getPCVValueList().add(blist);
 					}
 					else{
 						fpCount++;
@@ -868,14 +942,15 @@ public class Main {
 					
 					if(isPossible(blist)){
 						raceCount++;
-						System.out.print("race:");
-						out(blist);
-						System.out.print("\t"+s.getNo());
-						for(int k=0;k<slist.size();k++){
-							System.out.print("--<"+rlist.get(k)+">--");
-							System.out.print(slist.get(k));
-						}
-						System.out.println();
+//						System.out.print("race:");
+//						out(blist);
+//						System.out.print("\t"+s.getNo());
+//						for(int k=0;k<slist.size();k++){
+//							System.out.print("--<"+rlist.get(k)+">--");
+//							System.out.print(slist.get(k));
+//						}
+//						System.out.println();
+						result.getPCVValueList().add(blist);
 					}
 					else{
 						fpCount++;
@@ -885,33 +960,161 @@ public class Main {
 				}
 			}
 		}
+		return result;
 		
 	}
 	
-	//more constraints to remove false positives
-	public static boolean isPossible(boolean[] blist){
-		if(blist[Bbt.getNo()] && blist[Cbt.getNo()]){
+	public static ArrayList<boolean[]> trimList(ArrayList<boolean[]> list){
+		ArrayList<boolean[]> noDuplicate=new ArrayList<boolean[]>();
+		if(list.size()>0){
+			boolean same=false;
+			noDuplicate.add(list.get(0));
+			for(int i=0;i<list.size();i++){
+				same=false;
+				for(int j=0;j<noDuplicate.size();j++){
+					if(blistEqual(list.get(i), noDuplicate.get(j))){
+						same=true;
+						break;
+						//noDuplicate.add(list.get(i));
+					}
+				}
+				if(!same){
+					noDuplicate.add(list.get(i));
+				}
+			}
+		}
+		return noDuplicate;
+	}
+	public static boolean blistEqual(boolean[] a,boolean[] b){
+		if(a.length!=b.length){
 			return false;
 		}
+		else{
+			for(int i=0;i<a.length;i++){
+				if(a[i]!=b[i]){
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	//more constraints to remove false positives
+	public static boolean isPossible(boolean[] blist){
 		
+//		if(blist[Bbt.getNo()] && blist[Cbt.getNo()]){
+//			return false;
+//		}
+//		
+//		if(blist[Bbt.getNo()] && blist[Dbt.getNo()]){
+//			return false;
+//		}
+//		
+//		if(blist[Bgps.getNo()] && blist[Cbt.getNo()]){
+//			return false;
+//		}
+//		
+//		if(blist[Bgps.getNo()] && blist[Dbt.getNo()]){
+//			return false;
+//		}
+//		
+//		if(blist[Cgps.getNo()] && blist[Bbt.getNo()]){
+//			return false;
+//		}	
+		return true;
+	}
+	public static void main(String[] args){
+		ArrayList<PCVAssignmentsWithIndex> result=detection(false,false,false,true,false);
+		int count=0;
+		int fp=0;
+		int vdOnly=0;
+		int pcOnly=0;
+		int both=0;
+		boolean[] temp;
+		for(int i=0;i<result.size();i++){
+			for(int j=0;j<result.get(i).getPCVValueList().size();j++){
+				count++;
+				temp=result.get(i).getPCVValueList().get(j);
+				if(!eventSatisfyingVariableDependency(temp) && !eventSatisfyingPhysicalConstraints(temp)){
+					both++;
+					fp++;
+				}
+				else if(!eventSatisfyingVariableDependency(temp) && eventSatisfyingPhysicalConstraints(temp)){
+					vdOnly++;
+					fp++;
+				}
+				else if(eventSatisfyingVariableDependency(temp) && !eventSatisfyingPhysicalConstraints(temp)){
+					pcOnly++;
+					fp++;
+				}
+				else{
+					//nothing
+				}
+			}
+			
+		}
+		System.out.println("unstability count: "+count);
+		System.out.println("fp: "+fp);
+		System.out.println("tp: "+(count-fp));
+		System.out.println("vdOnly: "+vdOnly);
+		System.out.println("pcOnly: "+pcOnly);
+		System.out.println("both: "+both);
+		
+	}
+	
+	public static boolean eventSatisfyingVariableDependency(boolean[] blist){
+		//equivalent to method isGlobalConstraintSatisfied
+		if(!blist[Agps.getNo()]){
+			if(blist[Bgps.getNo()]){
+				return false;
+			}
+			if(blist[Cgps.getNo()]){
+				return false;
+			}
+			if(blist[Dgps.getNo()]){
+				return false;
+			}
+			if(blist[Egps.getNo()]){
+				return false;
+			}
+		}
+	
+		//(Bgps=>!Cgps) ^ (Cgps=>!Bgps) locations are mutually exclusive
+		if(blist[Bgps.getNo()]==true && blist[Cgps.getNo()]==true){
+			return false;
+		}
+	
+		//Egps=>Dgps
+		if(blist[Egps.getNo()] && !blist[Dgps.getNo()]){
+			return false;
+		}
+	
+		//Bt=>At
+		if(blist[Bt.getNo()] && !blist[At.getNo()]){
+			return false;
+		}
+		return true;
+	}
+	public static boolean eventSatisfyingPhysicalConstraints(boolean[] blist){
+		//equivalent to method isPossible()
+		if(blist[Bbt.getNo()] && blist[Cbt.getNo()]){
+		return false;
+		}
+	
 		if(blist[Bbt.getNo()] && blist[Dbt.getNo()]){
 			return false;
 		}
-		
+	
 		if(blist[Bgps.getNo()] && blist[Cbt.getNo()]){
 			return false;
 		}
-		
+	
 		if(blist[Bgps.getNo()] && blist[Dbt.getNo()]){
 			return false;
 		}
-		
+	
 		if(blist[Cgps.getNo()] && blist[Bbt.getNo()]){
 			return false;
-		}
-		
-		
+		}	
 		return true;
 	}
-
 }

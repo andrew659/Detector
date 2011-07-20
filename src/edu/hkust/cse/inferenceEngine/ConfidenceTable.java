@@ -160,7 +160,68 @@ public class ConfidenceTable {
 		}
 		count++;
 	}
-	
+	//fix one binary relation in the constraint network based on a known constraint
+	public void fixConstraint(Constraint c) throws Exception{
+		if(!this.pcvList.contains(c.getVarL()) || !this.pcvList.contains(c.getVarR())){
+			throw new Exception();
+		}
+		else{
+			switch(c.getType()){
+				case ConstraintType.EXCLUSIVENESS: {
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confExclusive=1.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confExclusiveFixed=true;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confImplication=0.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confImplicationFixed=true;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confEqui=0.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confEquiFixed=true;
+					
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confExclusive=1.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confExclusiveFixed=true;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confImplication=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confImplicationFixed=true;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confEqui=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confEquiFixed=true;
+					break;
+				}
+				case ConstraintType.IMPLICATION: {
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confImplication=1.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confImplicationFixed=true;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confExclusive=0.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confExclusiveFixed=true;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confEqui=0.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confEquiFixed=true;
+					
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confImplication=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confImplicationFixed=true;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confExclusive=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confExclusiveFixed=true;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confEqui=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confEquiFixed=true;
+					
+					break;
+				}
+				case ConstraintType.EQUIVALENCE: {
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confEqui=1.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confEquiFixed=true;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confImplication=0.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confImplicationFixed=true;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confExclusive=0.0;
+					this.table[c.getVarL().getNo()][c.getVarR().getNo()].confExclusiveFixed=true;
+					
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confEqui=1.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confEquiFixed=true;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confImplication=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confImplicationFixed=true;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confExclusive=0.0;
+					this.table[c.getVarR().getNo()][c.getVarL().getNo()].confExclusiveFixed=true;
+					break;
+				}
+				default: {
+					break;
+				}
+			}
+		}
+	}
 	public void printTable(){
 		for(int i=0;i<table.length;i++){
 			for(int j=0;j<table.length;j++){
@@ -171,49 +232,99 @@ public class ConfidenceTable {
 		}
 	}
 	
-	public void predict(){
+	//predict n constraints
+	public void predict(int n){
 		ArrayList<Node> exclusivenessList=new ArrayList<Node>();
 		ArrayList<Node> implicationList=new ArrayList<Node>();
 		ArrayList<Node> equivalenceList=new ArrayList<Node>();
 		for(int i=0;i<table.length;i++){
 			for(int j=0;j<table.length;j++){
 				if(i!=j){
-					Node temp=new Node();
-					temp.setConf(table[i][j].getConfExclusive());
-					temp.setI(i);
-					temp.setJ(j);
-					exclusivenessList.add(temp);
-					temp=new Node();
-					temp.setConf(table[i][j].getConfImplication());
-					temp.setI(i);
-					temp.setJ(j);
-					implicationList.add(temp);
-					temp=new Node();
-					temp.setConf(table[i][j].getConfEqui());
-					temp.setI(i);
-					temp.setJ(j);
+					Node temp;
+					if(!table[i][j].getConfExclusiveFixed()){
+						temp=new Node();
+						temp.setConf(table[i][j].getConfExclusive());
+						temp.setI(i);
+						temp.setJ(j);
+						exclusivenessList.add(temp);
+					}
+					if(!table[i][j].getConfImplicationFixed()){
+						temp=new Node();
+						temp.setConf(table[i][j].getConfImplication());
+						temp.setI(i);
+						temp.setJ(j);
+						implicationList.add(temp);
+					}
+					if(!table[i][j].getConfEquiFixed()){
+						temp=new Node();
+						temp.setConf(table[i][j].getConfEqui());
+						temp.setI(i);
+						temp.setJ(j);
+						equivalenceList.add(temp);
+					}					
 				}
 			}
 		}
-		sortNodeList(exclusivenessList);
-		sortNodeList(implicationList);
-		sortNodeList(equivalenceList);
-		System.out.println("----exclusiveness----");
-		for(int i=0;i<exclusivenessList.size();i++){
-			Node temp=exclusivenessList.get(i);
-			System.out.println(this.pcvList.get(temp.getI()).getName()+" and "+this.pcvList.get(temp.getJ()).getName()+" confidence="+temp.getConf());
-		}
-		System.out.println("----implication----");
-		for(int i=0;i<implicationList.size();i++){
-			Node temp=implicationList.get(i);
-			System.out.println(this.pcvList.get(temp.getI()).getName()+" and "+this.pcvList.get(temp.getJ()).getName()+" confidence="+temp.getConf());
-		}
-		System.out.println("----equivalence----");
-		for(int i=0;i<equivalenceList.size();i++){
-			Node temp=equivalenceList.get(i);
-			System.out.println(this.pcvList.get(temp.getI()).getName()+" and "+this.pcvList.get(temp.getJ()).getName()+" confidence="+temp.getConf());
-		}
+//		sortNodeList(exclusivenessList);
+//		sortNodeList(implicationList);
+//		sortNodeList(equivalenceList);
+//		System.out.println("----exclusiveness----");
+//		for(int i=0;i<exclusivenessList.size();i++){
+//			Node temp=exclusivenessList.get(i);
+//			System.out.println(this.pcvList.get(temp.getI()).getName()+" and "+this.pcvList.get(temp.getJ()).getName()+" confidence="+temp.getConf());
+//		}
+//		System.out.println("----implication----");
+//		for(int i=0;i<implicationList.size();i++){
+//			Node temp=implicationList.get(i);
+//			System.out.println(this.pcvList.get(temp.getI()).getName()+" and "+this.pcvList.get(temp.getJ()).getName()+" confidence="+temp.getConf());
+//		}
+//		System.out.println("----equivalence----");
+//		for(int i=0;i<equivalenceList.size();i++){
+//			Node temp=equivalenceList.get(i);
+//			System.out.println(this.pcvList.get(temp.getI()).getName()+" and "+this.pcvList.get(temp.getJ()).getName()+" confidence="+temp.getConf());
+//		}
 		
+		//merge and then ranking
+		ArrayList<Node> list=new ArrayList<Node>();
+		ArrayList<Short> typeList=new ArrayList<Short>();
+		for(int i=0;i<exclusivenessList.size();i++){
+			list.add(exclusivenessList.get(i));
+			typeList.add(ConstraintType.EXCLUSIVENESS);
+		}
+		for(int i=0;i<implicationList.size();i++){
+			list.add(implicationList.get(i));
+			typeList.add(ConstraintType.IMPLICATION);
+		}
+		for(int i=0;i<equivalenceList.size();i++){
+			list.add(equivalenceList.get(i));
+			typeList.add(ConstraintType.EQUIVALENCE);
+		}
+		sortNodeList(list, typeList);
+		int count=0;
+		for(int i=0;i<list.size();i++){
+			if(count==n){
+				break;
+			}
+			switch(typeList.get(i)){
+				case ConstraintType.EXCLUSIVENESS:{
+					System.out.print("Exclusive: ");
+					break;
+				}
+				case ConstraintType.IMPLICATION:{
+					System.out.print("Implication: ");
+					break;
+				}
+				case ConstraintType.EQUIVALENCE:{
+					System.out.print("Equivalence: ");
+					break;
+				}
+				default:{
+					break;
+				}
+			}
+			System.out.println(this.pcvList.get(list.get(i).getI()).getName()+" and "+this.pcvList.get(list.get(i).getJ()).getName()+" confidence="+list.get(i).getConf());
+			count++;
+		}
 	}
 	class Node{
 		private double conf;
@@ -299,7 +410,8 @@ public class ConfidenceTable {
 		
 	}
 	
-	public static void main(String[] args){
+	//testing function, no use later
+	public static void test(String[] args){
 		PropositionalContextVar<Boolean> Agps=new PropositionalContextVar<Boolean>((short)0, "Agps", ContextType.GPS_VALID,ContextOperator.EQUAL, true);
 		PropositionalContextVar<String> Bgps=new PropositionalContextVar<String>((short)1, "Bgps", ContextType.GPS_LOCATION, ContextOperator.EQUAL,"HOME" );
 		PropositionalContextVar<String> Cgps=new PropositionalContextVar<String>((short)2, "Cgps", ContextType.GPS_LOCATION, ContextOperator.EQUAL, "OFFICE");
@@ -337,14 +449,14 @@ public class ConfidenceTable {
 //				table.updateTable(valueList.get(i));
 //			}
 //		}
-		table.predict();
+		table.predict(10);
 		//table.printTable();
 		//table.testsort();
 		
 		
 	}
 	
-	//hard coding, for test constraint network(confidence table) only
+	//hard coding, for test constraint network(confidence table) only, no use later
 	public static boolean constraintsSat(boolean[] list){
 		if(list[0]==false){
 			if(list[1]==true || list[2]==true || list[3]==true || list[4]==true){
@@ -377,7 +489,7 @@ public class ConfidenceTable {
 		}
 	}
 	
-	public static void sortNodeList(ArrayList<Node> nlist){
+	public static void sortNodeList(ArrayList<Node> nlist,ArrayList<Short> tlist){
 		int size=nlist.size();
 		for(int i=0;i<size-1;i++){
 			for(int j=0;j<size-1-i;j++){
@@ -386,6 +498,10 @@ public class ConfidenceTable {
 					temp=nlist.get(j);
 					nlist.set(j, nlist.get(j+1));
 					nlist.set(j+1, temp);
+					short tempS;
+					tempS=tlist.get(j);
+					tlist.set(j, tlist.get(j+1));
+					tlist.set(j+1, tempS);
 				}
 			}
 		}

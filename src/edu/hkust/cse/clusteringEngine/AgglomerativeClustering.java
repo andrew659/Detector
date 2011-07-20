@@ -134,8 +134,8 @@ public class AgglomerativeClustering {
 	
 	/*
 	 * three cases
-	 * instance is a member of some cluster, then return 0, which means the event has happened before
-	 * instance forms a new group, then return -1, which means the event has never happened before and it has no similar events
+	 * instance is a member of some cluster, then return -1, which means the event has happened before
+	 * instance forms a new group, then return -2, which means the event has never happened before and it has no similar events
 	 * instance falls into some group, then return the index of the that group
 	 */
 	public int classifyInstance(boolean[] blist) throws Exception{
@@ -151,10 +151,41 @@ public class AgglomerativeClustering {
 				}
 			}
 			if(min==0.0){
-				return 0;
+				return -1;
 			}
 			else if(min>this.compactnessUpperBound){
+				return -2;
+			}
+			else{
+				return index;
+			}
+		}
+		else{
+			throw new Exception("cannot classify instance before clustering is done!");
+		}
+	}
+	
+	public int classifyPartialInstance(boolean[] blist,ArrayList<Short> pcvIndex) throws Exception{
+		if(this.clusteringDone){
+			double min=Double.MAX_VALUE;
+			double temp;
+			int index=0;
+			for(int i=0;i<result.size();i++){
+				temp=partialInsGroupDist(blist, pcvIndex, result.get(i));
+				if(temp<min){
+					min=temp;
+					index=i;
+					if(min==0.0){
+						break;
+					}
+				}
+			}
+			if(min==0.0){
+//				System.out.println("!!!!");
 				return -1;
+			}
+			else if(min>this.compactnessUpperBound){
+				return -2;
 			}
 			else{
 				return index;
@@ -213,6 +244,26 @@ public class AgglomerativeClustering {
 		return distance;
 	}
 	
+	protected double distBetweenPartialInsAndIns(boolean[] pIns,ArrayList<Short> pcvIndex,boolean[] ins){
+		double dist=0.0;
+		int index;
+		//System.out.println(pcvIndex.size());
+		for(int i=0;i<pcvIndex.size();i++){
+			index=pcvIndex.get(i);
+			//System.out.println(i+""+index);
+			if((pIns[i]&&!ins[index]) || (!pIns[i]&&ins[index])){
+				dist+=weight[index]*1.0;
+			}
+		}
+//		if(dist==0.0){
+//			System.out.print("partial event: ");
+//			printBooleanList(pIns);
+//			System.out.print("event: ");
+//			printBooleanList(ins);
+//		}
+		return dist;
+	}
+		
 	/*
 	 * in agglomerative clustering, there are several ways to compute group distance
 	 * single link, complete link, average link, and centroids
@@ -247,11 +298,34 @@ public class AgglomerativeClustering {
 		//do not try to fetch computed distance from hash map, because here ins might be a new object
 		for(int i=0;i<g.size();i++){
 			double temp=dist(ins,dataSet.get(g.get(i)));
+			if(temp==0.0){
+				dist=temp;
+				break;
+			}
 			if(temp>dist){
 				dist=temp;
 			}
 		}
 		//note that dist might be larger than the compactness upper bound
+		return dist;
+	}
+	
+	protected double partialInsGroupDist(boolean[] pIns,ArrayList<Short> pcvIndex, ArrayList<Integer> g){
+		double dist=0.0;
+		double temp;
+		for(int i=0;i<g.size();i++){
+			temp=distBetweenPartialInsAndIns(pIns, pcvIndex, dataSet.get(g.get(i)));
+			if(temp==0.0){
+				dist=temp;
+				break;
+			}
+			if(temp>dist){
+				dist=temp;
+			}
+		}
+		if(dist==0.0){
+//			System.out.println("------");
+		}
 		return dist;
 	}
 	
